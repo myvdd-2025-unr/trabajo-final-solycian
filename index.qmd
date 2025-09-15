@@ -1,0 +1,173 @@
+---
+title: "Limpieza y Análisis de Nacimientos EN ARGENTINA 2023"
+format: html
+execute:
+  echo: true       # mostrar el código
+  warning: false   # ocultar warnings
+  message: false   # ocultar mensajes
+  eval: true       # ✅ ejecutar el código
+---
+
+# Introducción
+
+En este informe se documenta el proceso de **limpieza, preparación y exploración** de la base de datos de nacimientos del año 2023.\
+El objetivo es obtener un dataset confiable y listo para ser utilizado en un **Shiny App interactivo**.
+
+------------------------------------------------------------------------
+
+# 1. Librerías necesarias
+
+Se cargan las librerías requeridas para la manipulación, limpieza y análisis de datos.
+
+```{r}
+library(readr)
+library(dplyr) 
+library(stringr)
+library(tidyr)
+```
+
+# 2. Carga del dataset
+
+Se importa el dataset crudo en formato CSV, previamente descargado.
+
+```{r}
+datos <- read_csv2("nacimientos2023.csv")
+
+# Ver nombres de columnas
+names(datos)
+
+```
+
+# 3. Selección de variables relevantes y limpieza
+
+Se seleccionan las variables de interés y se realiza el proceso de limpieza:
+
+-   Se eliminan los números iniciales en `edad_madre_grupo`.
+
+-   Se normalizan nombres de jurisdicciones (abreviaciones y reemplazos).
+
+-   Se renombran columnas para simplificar.
+
+-   Se reemplazan valores faltantes con `"Desconocido"` o `0`.
+
+-   Se eliminan registros con valores desconocidos.
+
+```{r}
+datos_limpios <- datos %>%
+  select(
+    jurisdicion_residencia_nombre,
+    edad_madre_grupo,
+    Sexo,
+    nacimientos_cantidad
+  ) %>%
+  mutate(
+    # Quitar los números iniciales de edad_madre_grupo
+    edad_madre_grupo = str_replace(edad_madre_grupo, "^[0-9]+\\.\\s*", ""),
+    
+    # Normalizar nombres de jurisdicciones
+    jurisdicion_residencia_nombre = case_when(
+      jurisdicion_residencia_nombre == "Ciudad Autónoma de Buenos Aires" ~ "CABA",
+      jurisdicion_residencia_nombre == "Tierra del Fuego, Antártida e Islas del Atlántico Sur" ~ "Tierra del Fuego",
+      jurisdicion_residencia_nombre == "Santiago del Estero" ~ "Sgo. del Estero",
+      jurisdicion_residencia_nombre == "Buenos Aires" ~ "Bs.As.",
+      jurisdicion_residencia_nombre == "Sin información" ~ NA_character_,
+      TRUE ~ jurisdicion_residencia_nombre
+    )
+  ) %>%
+  rename(
+    jurisdiccion = jurisdicion_residencia_nombre,
+    edad_grupo   = edad_madre_grupo,
+    sexo         = Sexo,
+    nacimientos  = nacimientos_cantidad
+  ) %>%
+  # Manejo de valores faltantes
+  mutate(
+    jurisdiccion = ifelse(is.na(jurisdiccion), "Desconocido", jurisdiccion),
+    edad_grupo   = ifelse(is.na(edad_grupo), "Desconocido", edad_grupo),
+    sexo         = ifelse(is.na(sexo), "Desconocido", sexo),
+    nacimientos  = ifelse(is.na(nacimientos), 0, nacimientos)
+  ) %>%
+  # Eliminar registros con valores no deseados
+  filter(
+    jurisdiccion != "Desconocido",
+    edad_grupo   != "Desconocido",
+    sexo         != "Desconocido"
+  )
+
+```
+
+# 4. Verificación de la limpieza
+
+Se verifican los resultados de la limpieza con un resumen estadístico y el conteo de valores faltantes.
+
+```{r}
+summary(datos_limpios)
+colSums(is.na(datos_limpios))
+
+```
+
+# 5. Exportación del dataset limpio
+
+Se guarda el dataset limpio en la carpeta de trabajo definida.
+
+```{r}
+dir.create("C:/Users/Soledad/Desktop/trabajo-final-solycian", recursive = TRUE, showWarnings = FALSE)
+write_csv(datos_limpios, "C:/Users/Soledad/Desktop/trabajo-final-solycian/trabajo-final-solycian/nacimientos2023_limpio1.csv")
+
+```
+
+# 6. Resumen exploratorio de los datos limpios
+
+Se realiza un análisis descriptivo básico para verificar consistencia y calidad de los datos:
+
+-   Cantidad de registros.
+
+-   Provincias presentes y cantidad de nacimientos.
+
+-   Distribución por sexo.
+
+-   Distribución por grupo de edad de la madre.
+
+    ```{r}
+    # Cantidad de registros
+    nrow(datos_limpios)
+
+    # Verificar valores faltantes
+    colSums(is.na(datos_limpios))
+
+    # Provincias presentes
+    datos_limpios %>%
+      count(jurisdiccion, sort = TRUE)
+
+    # Resumen de nacimientos por provincia
+    datos_limpios %>%
+      group_by(jurisdiccion) %>%
+      summarise(total_nacimientos = sum(nacimientos, na.rm = TRUE)) %>%
+      arrange(desc(total_nacimientos))
+
+    # Distribución por sexo
+    datos_limpios %>%
+      group_by(sexo) %>%
+      summarise(total_nacimientos = sum(nacimientos, na.rm = TRUE))
+
+    # Distribución por grupo de edad de la madre
+    datos_limpios %>%
+      group_by(edad_grupo) %>%
+      summarise(total_nacimientos = sum(nacimientos, na.rm = TRUE)) %>%
+      arrange(edad_grupo)
+
+    ```
+
+# Conclusiones
+
+-   Se redujo el dataset a las variables clave.
+
+-   Se normalizó la variable **edad_grupo**.
+
+-   Se abreviaron nombres largos de jurisdicciones.
+
+-   Se eliminaron los registros con valores faltantes y desconocidos.
+
+-   Se agruparon categorías menores en la variable **sexo**.
+
+-   El dataset limpio quedó listo para análisis interactivo con **Shiny**.
