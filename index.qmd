@@ -106,13 +106,11 @@ colSums(is.na(datos_limpios))
 
 ```
 
-# 5. Exportación del dataset limpio
-
-Se guarda el dataset limpio en la carpeta de trabajo definida.
+# 5. Guardar dataset limpio dentro del directorio del proyecto
 
 ```{r}
-dir.create("C:/Users/Soledad/Desktop/trabajo-final-solycian", recursive = TRUE, showWarnings = FALSE)
-write_csv(datos_limpios, "C:/Users/Soledad/Desktop/trabajo-final-solycian/trabajo-final-solycian/nacimientos2023_limpio1.csv")
+
+write_csv(datos_limpios, "nacimientos2023_limpio1.csv")
 
 ```
 
