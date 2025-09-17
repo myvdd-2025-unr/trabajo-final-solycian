@@ -8,7 +8,7 @@ library(DT)
 library(plotly)
 
 # ------------------------
-# Cargar y limpiar datos
+# Cargar y limpiar datos del dataset
 # ------------------------
 nacimientos <- read_csv("nacimientos2023_limpio1.csv", show_col_types = FALSE) %>%
   rename_with(tolower) %>%   # nombres de columnas a minúsculas
