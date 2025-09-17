@@ -80,3 +80,4 @@ El archivo **`app.R`** contiene la aplicación Shiny que permite analizar los na
 ## Objetivo final
 Gracias a este flujo de trabajo, se dispone de una **base de datos limpia y confiable** junto con una **herramienta interactiva** que permite explorar y comprender mejor la distribución de los nacimientos en Argentina durante el año 2023, facilitando el análisis tanto por sexo, jurisdicción como por grupo etario de la madre.
 
+
